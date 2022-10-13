@@ -52,7 +52,7 @@ func addExpense(s *Bot, msg Message) error {
 func (s *Bot) IncomingMessage(msg Message) error {
 	switch {
 	case msg.Text == "/start":
-		return s.tgClient.SendMessage("Hello, welcome to bot!", msg.UserID)
+		return s.tgClient.SendMessage("hello", msg.UserID)
 	case msg.Text == "/help":
 		return s.tgClient.SendMessage(help, msg.UserID)
 	case strings.Contains(msg.Text, addCommand):
@@ -95,5 +95,5 @@ func (s *Bot) IncomingMessage(msg Message) error {
 		return s.tgClient.SendMessage(builder.String(), msg.UserID)
 	}
 
-	return s.tgClient.SendMessage("Не знаю эту команду", msg.UserID)
+	return s.tgClient.SendMessage("не знаю эту команду", msg.UserID)
 }
