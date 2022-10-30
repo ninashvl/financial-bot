@@ -46,7 +46,7 @@ func (s *Bot) HandleCommand(msg *Message) error {
 		s.dlgStateStorage.Add(msg.UserID, models.GetCommandState)
 		return s.tgClient.SendRangeKeyboard(msg.UserID, "Выберите диапазон")
 	default:
-		return s.tgClient.SendMessage("не знаю эту команду", msg.UserID)
+		return s.tgClient.SendMessage(invalidCommand, msg.UserID)
 	}
 }
 
@@ -57,7 +57,7 @@ func (s *Bot) HandleMessage(msg *Message) error {
 	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.GetCommandState:
 		return s.GetExpense(msg)
 	default:
-		return s.tgClient.SendMessage("воспользуйтесь /help", msg.UserID)
+		return s.tgClient.SendMessage(invalidMsg, msg.UserID)
 	}
 }
 

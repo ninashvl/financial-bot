@@ -15,7 +15,7 @@ func (s *Bot) addExpense(msg *Message) error {
 	}
 	num, err := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
 	if err != nil {
-		return s.tgClient.SendMessage(invalidMsg+err.Error(), msg.UserID)
+		return s.tgClient.SendMessage(invalidMsg, msg.UserID)
 	}
 	category := strings.TrimSpace(parts[1])
 	exp := &models.Expense{
