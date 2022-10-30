@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
+	"os/signal"
+
+	"golang.org/x/sys/unix"
 
 	"gitlab.ozon.dev/ninashvl/homework-1/config"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/clients/tg"
@@ -9,6 +14,8 @@ import (
 )
 
 func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), unix.SIGTERM, unix.SIGKILL, unix.SIGINT)
+	defer cancel()
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatal("config init failed:", err)
@@ -20,5 +27,6 @@ func main() {
 	}
 
 	bot := messages.New(tgClient)
-	tgClient.ListenUpdates(bot)
+	tgClient.ListenUpdates(ctx, bot)
+	fmt.Println("[INFO] application gracefully stopped")
 }

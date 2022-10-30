@@ -16,7 +16,7 @@ func New() *Storage {
 	}
 }
 
-func (s *Storage) Add(userID int64, state int) {
+func (s *Storage) Set(userID int64, state int) {
 	s.mutex.Lock()
 	s.m[userID] = state
 	s.mutex.Unlock()

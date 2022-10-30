@@ -1,10 +1,11 @@
 package messages
 
 const (
-	startCommand       = "/start"
-	addCommand         = "/add"
-	getExpensesCommand = "/get"
-	helpCommand        = "/help"
+	startCommand          = "/start"
+	helpCommand           = "/help"
+	addCommand            = "/add"
+	getExpensesCommand    = "/get"
+	chooseCurrencyCommand = "/choose_currency"
 )
 
 const (

@@ -1,6 +1,8 @@
 package messages
 
 import (
+	"context"
+
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage"
 	in_mem_dlg "gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage/in_memory"
@@ -11,6 +13,7 @@ import (
 type MessageSender interface {
 	SendMessage(text string, userID int64) error
 	SendRangeKeyboard(userID int64, text string) error
+	SendCurrencyKeyboard(userID int64, text string) error
 }
 
 type Bot struct {
@@ -40,11 +43,14 @@ func (s *Bot) HandleCommand(msg *Message) error {
 	case msg.Text == helpCommand && msg.IsCommand:
 		return s.tgClient.SendMessage(help, msg.UserID)
 	case msg.Text == addCommand && msg.IsCommand:
-		s.dlgStateStorage.Add(msg.UserID, models.AddCommandState)
+		s.dlgStateStorage.Set(msg.UserID, models.AddCommandState)
 		return s.tgClient.SendMessage(addMessage, msg.UserID)
 	case msg.Text == getExpensesCommand && msg.IsCommand:
-		s.dlgStateStorage.Add(msg.UserID, models.GetCommandState)
+		s.dlgStateStorage.Set(msg.UserID, models.GetCommandState)
 		return s.tgClient.SendRangeKeyboard(msg.UserID, "Выберите диапазон")
+	case msg.Text == chooseCurrencyCommand && msg.IsCommand:
+		s.dlgStateStorage.Set(msg.UserID, models.ChooseCurrencyState)
+		return s.tgClient.SendCurrencyKeyboard(msg.UserID, "Выберите валюту")
 	default:
 		return s.tgClient.SendMessage(invalidCommand, msg.UserID)
 	}
@@ -56,6 +62,8 @@ func (s *Bot) HandleMessage(msg *Message) error {
 		return s.addExpense(msg)
 	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.GetCommandState:
 		return s.GetExpense(msg)
+	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.ChooseCurrencyState:
+		return s.SetCurrency(msg)
 	default:
 		return s.tgClient.SendMessage(invalidMsg, msg.UserID)
 	}
@@ -71,4 +79,8 @@ func (s *Bot) IncomingMessage(msg *Message) error {
 		return s.HandleCommand(msg)
 	}
 	return s.HandleMessage(msg)
+}
+
+func (s *Bot) ListenQuotes(ctx context.Context) {
+	s.expStorage.UpdateCurrency(ctx)
 }

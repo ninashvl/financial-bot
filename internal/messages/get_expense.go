@@ -27,11 +27,13 @@ func (s *Bot) GetExpense(msg *Message) error {
 	if len(res) == 0 {
 		return s.tgClient.SendMessage(expensesNotFound, msg.UserID)
 	}
+	curr := s.expStorage.GetCurrency(msg.UserID)
 	builder := strings.Builder{}
 	for _, v := range res {
 		builder.WriteString(v.Category)
 		builder.WriteString(": ")
-		builder.WriteString(strconv.FormatFloat(v.Amount, 'f', -2, 64))
+		builder.WriteString(strconv.FormatFloat(v.Amount, 'f', 2, 64))
+		builder.WriteString(" " + curr)
 		builder.WriteString("\n")
 	}
 	return s.tgClient.SendMessage(builder.String(), msg.UserID)
