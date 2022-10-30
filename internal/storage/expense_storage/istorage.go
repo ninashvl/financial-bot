@@ -1,4 +1,4 @@
-package storage
+package expense_storage
 
 import (
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"

@@ -1,4 +1,4 @@
-package InMemory
+package in_memory
 
 import (
 	"sync"
@@ -7,10 +7,10 @@ import (
 	"github.com/pkg/errors"
 
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
-	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage"
+	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/expense_storage"
 )
 
-var _ storage.IStorage = &Storage{}
+var _ expense_storage.IStorage = &Storage{}
 
 type Storage struct {
 	m     map[int64]map[string][]*models.Expense
@@ -47,15 +47,15 @@ func (s *Storage) GetByRange(userID int64, timeRange int) ([]*models.TotalExpens
 		m[category].Category = category
 		for _, v := range exps {
 			switch timeRange {
-			case storage.Day:
+			case expense_storage.Day:
 				if v.Date.Day() == now.Day() && v.Date.Month() == now.Month() && v.Date.Year() == now.Year() {
 					m[category].Amount += v.Amount
 				}
-			case storage.Month:
+			case expense_storage.Month:
 				if v.Date.Month() == now.Month() && v.Date.Year() == now.Year() {
 					m[category].Amount += v.Amount
 				}
-			case storage.Year:
+			case expense_storage.Year:
 				if v.Date.Year() == now.Year() {
 					m[category].Amount += v.Amount
 				}

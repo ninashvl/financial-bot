@@ -29,7 +29,9 @@ func New(tokenGetter TokenGetter) (*Client, error) {
 }
 
 func (c *Client) SendMessage(text string, userID int64) error {
-	_, err := c.client.Send(tgbotapi.NewMessage(userID, text))
+	msg := tgbotapi.NewMessage(userID, text)
+	msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+	_, err := c.client.Send(msg)
 	if err != nil {
 		return errors.Wrap(err, "client.Send")
 	}
@@ -47,14 +49,29 @@ func (c *Client) ListenUpdates(msgModel *messages.Bot) {
 	for update := range updates {
 		if update.Message != nil { // If we got a message
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-			err := msgModel.IncomingMessage(messages.Message{
-				Text:   update.Message.Text,
-				UserID: update.Message.From.ID,
-			})
+			msg := &messages.Message{
+				Text:      update.Message.Text,
+				UserID:    update.Message.From.ID,
+				IsCommand: update.Message.IsCommand(),
+			}
+			err := msgModel.IncomingMessage(msg)
 			if err != nil {
 				log.Println("error processing message:", err)
 			}
 		}
 	}
+}
+
+func (c *Client) SendRangeKeyboard(userID int64, text string) error {
+	rangeKeyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("День"),
+			tgbotapi.NewKeyboardButton("Месяц"),
+			tgbotapi.NewKeyboardButton("Год"),
+		),
+	)
+	msg := tgbotapi.NewMessage(userID, text)
+	msg.ReplyMarkup = rangeKeyboard
+	_, err := c.client.Send(msg)
+	return err
 }

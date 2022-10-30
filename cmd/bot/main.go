@@ -9,17 +9,16 @@ import (
 )
 
 func main() {
-	config, err := config.New()
+	cfg, err := config.New()
 	if err != nil {
 		log.Fatal("config init failed:", err)
 	}
 
-	tgClient, err := tg.New(config)
+	tgClient, err := tg.New(cfg)
 	if err != nil {
 		log.Fatal("tg client init failed:", err)
 	}
 
-	msgModel := messages.New(tgClient)
-
-	tgClient.ListenUpdates(msgModel)
+	bot := messages.New(tgClient)
+	tgClient.ListenUpdates(bot)
 }

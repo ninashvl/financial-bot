@@ -16,6 +16,10 @@ type MockMessageSender struct {
 	recorder *MockMessageSenderMockRecorder
 }
 
+func (m *MockMessageSender) SendRangeKeyboard(userID int64, text string) error {
+	return nil
+}
+
 // MockMessageSenderMockRecorder is the mock recorder for MockMessageSender.
 type MockMessageSenderMockRecorder struct {
 	mock *MockMessageSender

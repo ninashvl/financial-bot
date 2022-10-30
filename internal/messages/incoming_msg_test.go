@@ -16,7 +16,7 @@ func Test_OnStartCommand_ShouldAnswerWithIntroMessage(t *testing.T) {
 
 	sender.EXPECT().SendMessage("hello", int64(123))
 
-	err := model.IncomingMessage(Message{
+	err := model.IncomingMessage(&Message{
 		Text:   "/start",
 		UserID: 123,
 	})
@@ -31,7 +31,7 @@ func Test_OnUnknownCommand_ShouldAnswerWithHelpMessage(t *testing.T) {
 	sender.EXPECT().SendMessage("не знаю эту команду", int64(123))
 	model := New(sender)
 
-	err := model.IncomingMessage(Message{
+	err := model.IncomingMessage(&Message{
 		Text:   "some text",
 		UserID: 123,
 	})
