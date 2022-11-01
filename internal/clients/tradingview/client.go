@@ -3,7 +3,7 @@ package tradingview
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,7 +50,7 @@ func (c *Client) GetQuote(ticker string) (float64, error) {
 
 	defer resp.Body.Close()
 
-	htmlData, err := ioutil.ReadAll(resp.Body)
+	htmlData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return 0, fmt.Errorf("unable to decode response body: %w", err)
 	}
