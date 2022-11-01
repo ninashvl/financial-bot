@@ -121,7 +121,7 @@ func (s *Storage) GetByRange(userID int64, timeRange int) ([]*models.TotalExpens
 }
 
 func (s *Storage) UpdateCurrency(ctx context.Context) {
-	ticker := time.NewTicker(time.Second * 10)
+	ticker := time.NewTicker(time.Minute * 10)
 	for {
 		select {
 		case <-ctx.Done():
