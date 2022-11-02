@@ -48,5 +48,18 @@ install-smartimports: bindir
 		(GOBIN=${BINDIR} go install github.com/pav5000/smartimports/cmd/smartimports@latest && \
 		mv ${BINDIR}/smartimports ${SMARTIMPORTS})
 
+migrate-up:
+	docker run -v ./migrations:/migrations --network host migrate/migrate
+    	-path=/migrations/ -database postgres://localhost:5432/database up
+
+migrate-down:
+	docker run -v ./migrations:/migrations --network host migrate/migrate
+    	-path=/migrations/ -database postgres://localhost:5432/database down
+
+migrate-create:
+	docker run -v ./migrations:/migrations --network host migrate/migrate
+    	-path=/migrations/ -database postgres://localhost:5432/database create
+
+
 docker-run:
 	sudo docker compose up
