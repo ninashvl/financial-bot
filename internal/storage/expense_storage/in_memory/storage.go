@@ -79,7 +79,7 @@ func (s *Storage) GetByRange(userID int64, timeRange int) ([]*models.TotalExpens
 	m := make(map[string]*models.TotalExpense)
 	now := time.Now()
 	if _, ok := s.m[userID]; !ok {
-		return nil, errors.New("User not found")
+		return nil, errors.New("Пока у Вас еще не было трат за выбранный диапазон...")
 	}
 	var curr float64 = 1
 	if c, ok := s.currency[userID]; ok {
