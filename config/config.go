@@ -11,6 +11,7 @@ const configFile = "data/config.yaml"
 
 type Config struct {
 	Token string `yaml:"token"`
+	DbDSN string `yaml:"dbDSN"`
 }
 
 type Service struct {

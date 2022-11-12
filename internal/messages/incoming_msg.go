@@ -2,7 +2,10 @@ package messages
 
 import (
 	"context"
+	"log"
 
+	"github.com/jackc/pgx/v4/pgxpool"
+	"gitlab.ozon.dev/ninashvl/homework-1/config"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage"
 	in_mem_dlg "gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage/in_memory"
@@ -22,7 +25,11 @@ type Bot struct {
 	dlgStateStorage dialogue_state_storage.IStorage
 }
 
-func New(tgClient MessageSender) *Bot {
+func New(ctx context.Context, tgClient MessageSender, cfg *config.Config) *Bot {
+	dbPool, err := pgxpool.Connect(ctx, cfg.DbDSN)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &Bot{
 		tgClient:        tgClient,
 		expStorage:      in_mem_exp.New(),

@@ -1,2 +1,3 @@
 token: "5638303122:AAGeMgstE7oXRnh0z5hUoFDOlILDmOwH45M"
 # временно хардкод
+dbDSN: "postgres://nina:qwerty@localhost:5432/fin_db"

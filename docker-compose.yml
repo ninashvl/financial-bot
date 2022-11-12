@@ -1,0 +1,16 @@
+version: "3.1"
+
+services:
+  postgres:
+    image: postgres:10
+    restart: always
+    container_name: postgres-fin-bot
+    environment:
+      - POSTGRES_USER=nina
+      - POSTGRES_PASSWORD=qwerty
+      - POSTGRES_DB=fin_db
+    ports:
+      - "5003:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
