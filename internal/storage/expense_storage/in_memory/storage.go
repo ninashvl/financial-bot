@@ -18,6 +18,7 @@ var _ expense_storage.IStorage = &Storage{}
 type Storage struct {
 	m              map[int64]map[string][]*models.Expense
 	currency       map[int64]string
+	limit          map[int64]float64
 	currencyClient tradingview.Client
 
 	usdRUB float64
@@ -27,25 +28,27 @@ type Storage struct {
 	mutex sync.RWMutex
 }
 
-func (s *Storage) GetCurrency(userID int64) string {
+func (s *Storage) GetCurrency(ctx context.Context, userID int64) (string, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	if _, ok := s.currency[userID]; !ok {
-		return models.RubCurrency
+		return models.RubCurrency, nil
 	}
-	return s.currency[userID]
+	return s.currency[userID], nil
 }
 
-func (s *Storage) SetCurrency(userID int64, curr string) {
+func (s *Storage) SetCurrency(ctx context.Context, userID int64, curr string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.currency[userID] = curr
+	return nil
 }
 
 func New() *Storage {
 	return &Storage{
 		m:        make(map[int64]map[string][]*models.Expense),
 		currency: make(map[int64]string),
+		limit:    make(map[int64]float64),
 		mutex:    sync.RWMutex{},
 		usdRUB:   61,
 		cnyRUB:   8,
@@ -53,7 +56,7 @@ func New() *Storage {
 	}
 }
 
-func (s *Storage) Add(userID int64, expense *models.Expense) {
+func (s *Storage) Add(ctx context.Context, userID int64, expense *models.Expense) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	if _, ok := s.m[userID]; !ok {
@@ -73,9 +76,10 @@ func (s *Storage) Add(userID int64, expense *models.Expense) {
 		}
 	}
 	s.m[userID][expense.Category] = append(s.m[userID][expense.Category], expense)
+	return nil
 }
 
-func (s *Storage) GetByRange(userID int64, timeRange int) ([]*models.TotalExpense, error) {
+func (s *Storage) GetByRange(ctx context.Context, userID int64, timeRange int) ([]*models.TotalExpense, error) {
 	m := make(map[string]*models.TotalExpense)
 	now := time.Now()
 	if _, ok := s.m[userID]; !ok {
@@ -120,12 +124,12 @@ func (s *Storage) GetByRange(userID int64, timeRange int) ([]*models.TotalExpens
 	return res, nil
 }
 
-func (s *Storage) UpdateCurrency(ctx context.Context) {
+func (s *Storage) UpdateCurrency(ctx context.Context) error {
 	ticker := time.NewTicker(time.Minute * 10)
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return nil
 		case <-ticker.C:
 			log.Println("[INFO] start of updating currency quotes")
 
@@ -154,4 +158,17 @@ func (s *Storage) UpdateCurrency(ctx context.Context) {
 		}
 
 	}
+}
+
+func (s *Storage) SetLimit(ctx context.Context, userID int64, limit float64) error {
+	s.mutex.Lock()
+	s.limit[userID] = limit
+	s.mutex.Unlock()
+	return nil
+}
+
+func (s *Storage) GetLimit(ctx context.Context, userID int64) (float64, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.limit[userID], nil
 }

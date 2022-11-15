@@ -1,6 +1,7 @@
 package messages
 
 import (
+	"context"
 	"strconv"
 	"strings"
 
@@ -8,16 +9,16 @@ import (
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/expense_storage"
 )
 
-func (s *Bot) GetExpense(msg *Message) error {
+func (s *Bot) GetExpense(ctx context.Context, msg *Message) error {
 	var res []*models.TotalExpense
 	var err error
 	switch strings.TrimSpace(msg.Text) {
 	case "День":
-		res, err = s.expStorage.GetByRange(msg.UserID, expense_storage.Day)
+		res, err = s.expStorage.GetByRange(ctx, msg.UserID, expense_storage.Day)
 	case "Месяц":
-		res, err = s.expStorage.GetByRange(msg.UserID, expense_storage.Month)
+		res, err = s.expStorage.GetByRange(ctx, msg.UserID, expense_storage.Month)
 	case "Год":
-		res, err = s.expStorage.GetByRange(msg.UserID, expense_storage.Year)
+		res, err = s.expStorage.GetByRange(ctx, msg.UserID, expense_storage.Year)
 	default:
 		return s.tgClient.SendMessage(invalidRange, msg.UserID)
 	}
@@ -27,7 +28,10 @@ func (s *Bot) GetExpense(msg *Message) error {
 	if len(res) == 0 {
 		return s.tgClient.SendMessage(expensesNotFound, msg.UserID)
 	}
-	curr := s.expStorage.GetCurrency(msg.UserID)
+	curr, err := s.expStorage.GetCurrency(ctx, msg.UserID)
+	if err != nil {
+		return err
+	}
 	builder := strings.Builder{}
 	for _, v := range res {
 		builder.WriteString(v.Category)

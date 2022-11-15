@@ -14,7 +14,8 @@ import (
 )
 
 func main() {
-	ctx, cancel := signal.NotifyContext(context.Background(), unix.SIGTERM, unix.SIGKILL, unix.SIGINT)
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		unix.SIGTERM, unix.SIGKILL, unix.SIGINT)
 	defer cancel()
 	cfg, err := config.New()
 	if err != nil {
@@ -26,7 +27,7 @@ func main() {
 		log.Fatal("tg client init failed:", err)
 	}
 
-	bot := messages.New(tgClient)
+	bot := messages.New(tgClient, cfg)
 	tgClient.ListenUpdates(ctx, bot)
 	fmt.Println("[INFO] application gracefully stopped")
 }

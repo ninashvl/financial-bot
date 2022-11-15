@@ -61,7 +61,7 @@ func (c *Client) ListenUpdates(ctx context.Context, bot *messages.Bot) {
 					UserID:    update.Message.From.ID,
 					IsCommand: update.Message.IsCommand(),
 				}
-				err := bot.IncomingMessage(msg)
+				err := bot.IncomingMessage(ctx, msg)
 				if err != nil {
 					log.Println("error processing message:", err)
 				}

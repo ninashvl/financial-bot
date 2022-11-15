@@ -2,15 +2,17 @@ package messages
 
 import (
 	"context"
+	"database/sql"
 	"log"
 
-	"github.com/jackc/pgx/v4/pgxpool"
 	"gitlab.ozon.dev/ninashvl/homework-1/config"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage"
 	in_mem_dlg "gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage/in_memory"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/expense_storage"
-	in_mem_exp "gitlab.ozon.dev/ninashvl/homework-1/internal/storage/expense_storage/in_memory"
+	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/expense_storage/psql"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type MessageSender interface {
@@ -25,14 +27,14 @@ type Bot struct {
 	dlgStateStorage dialogue_state_storage.IStorage
 }
 
-func New(ctx context.Context, tgClient MessageSender, cfg *config.Config) *Bot {
-	dbPool, err := pgxpool.Connect(ctx, cfg.DbDSN)
+func New(tgClient MessageSender, cfg *config.Service) *Bot {
+	db, err := sql.Open("pgx", cfg.PsqlDSN())
 	if err != nil {
 		log.Fatal(err)
 	}
 	return &Bot{
 		tgClient:        tgClient,
-		expStorage:      in_mem_exp.New(),
+		expStorage:      psql.New(db),
 		dlgStateStorage: in_mem_dlg.New(),
 	}
 }
@@ -58,25 +60,30 @@ func (s *Bot) HandleCommand(msg *Message) error {
 	case msg.Text == chooseCurrencyCommand && msg.IsCommand:
 		s.dlgStateStorage.Set(msg.UserID, models.ChooseCurrencyState)
 		return s.tgClient.SendCurrencyKeyboard(msg.UserID, "Выберите валюту")
+	case msg.Text == addLimit && msg.IsCommand:
+		s.dlgStateStorage.Set(msg.UserID, models.AddLimit)
+		return s.tgClient.SendMessage("Введите лимит на траты в рублях на месяц", msg.UserID)
 	default:
 		return s.tgClient.SendMessage(invalidCommand, msg.UserID)
 	}
 }
 
-func (s *Bot) HandleMessage(msg *Message) error {
+func (s *Bot) HandleMessage(ctx context.Context, msg *Message) error {
 	switch {
 	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.AddCommandState:
-		return s.addExpense(msg)
+		return s.AddExpense(ctx, msg)
 	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.GetCommandState:
-		return s.GetExpense(msg)
+		return s.GetExpense(ctx, msg)
 	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.ChooseCurrencyState:
-		return s.SetCurrency(msg)
+		return s.SetCurrency(ctx, msg)
+	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.AddLimit:
+		return s.AddLimit(ctx, msg)
 	default:
 		return s.tgClient.SendMessage(invalidMsg, msg.UserID)
 	}
 }
 
-func (s *Bot) IncomingMessage(msg *Message) error {
+func (s *Bot) IncomingMessage(ctx context.Context, msg *Message) error {
 	defer func() {
 		if !msg.IsCommand {
 			s.dlgStateStorage.DeleteState(msg.UserID)
@@ -85,7 +92,7 @@ func (s *Bot) IncomingMessage(msg *Message) error {
 	if msg.IsCommand {
 		return s.HandleCommand(msg)
 	}
-	return s.HandleMessage(msg)
+	return s.HandleMessage(ctx, msg)
 }
 
 func (s *Bot) ListenQuotes(ctx context.Context) {

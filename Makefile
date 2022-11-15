@@ -24,6 +24,7 @@ run:
 .PHONY: generate
 generate: install-mockgen
 	${MOCKGEN} -source=internal/messages/incoming_msg.go -destination=internal/mocks/messages/messages_mocks.go
+	-source=internal/storage/expense_storage/istorage.go -destination=internal/storage/expense_storage/mock/storage.go
 
 .PHONY: lint
 lint: install-lint

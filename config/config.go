@@ -37,3 +37,7 @@ func New() (*Service, error) {
 func (s *Service) Token() string {
 	return s.config.Token
 }
+
+func (s *Service) PsqlDSN() string {
+	return s.config.DbDSN
+}
