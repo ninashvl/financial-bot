@@ -46,7 +46,7 @@ func main() {
 	s := expstore.New(db)
 	b := babble.NewBabbler()
 	for i := 0; i < testUsersCount; i++ {
-		bar.Add(1)
+		_ = bar.Add(1)
 		select {
 		case <-ctx.Done():
 			log.Println("Gracefully shutdown")

@@ -96,5 +96,8 @@ func (s *Bot) IncomingMessage(ctx context.Context, msg *Message) error {
 }
 
 func (s *Bot) ListenQuotes(ctx context.Context) {
-	s.expStorage.UpdateCurrency(ctx)
+	err := s.expStorage.UpdateCurrency(ctx)
+	if err != nil {
+		log.Println("[ERROR] UpdateCurrency failed")
+	}
 }

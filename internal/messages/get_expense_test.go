@@ -67,7 +67,7 @@ func TestBot_getExpense(t *testing.T) {
 	curr := "RUB"
 
 	expStore.EXPECT().GetByRange(context.TODO(), userID, expense_storage.Day).Return([]*models.TotalExpense{
-		{amount, category},
+		{Amount: amount, Category: category},
 	}, nil)
 	expStore.EXPECT().GetCurrency(context.TODO(), userID).Return("RUB", nil)
 	resMsg := category + ": " + strconv.FormatFloat(amount, 'f', 2, 64) + " " + curr + "\n"

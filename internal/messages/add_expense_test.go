@@ -70,6 +70,7 @@ func TestBot_addExpenseSuccess(t *testing.T) {
 	userID := int64(1)
 	expStore.EXPECT().Add(context.TODO(), userID, gomock.Any())
 	sender.EXPECT().SendMessage(savedMsg, userID)
+	expStore.EXPECT().GetLimit(context.TODO(), userID)
 	msg := &Message{
 		Text:   "1,категория",
 		UserID: userID,

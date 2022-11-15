@@ -43,7 +43,7 @@ func (s *Bot) AddExpense(ctx context.Context, msg *Message) error {
 		return err
 	}
 
-	go s.checkLimit(ctx, msg.UserID)
+	_ = s.checkLimit(ctx, msg.UserID)
 
 	return s.tgClient.SendMessage(savedMsg, msg.UserID)
 }
