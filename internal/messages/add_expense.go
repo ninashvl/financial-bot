@@ -15,12 +15,15 @@ import (
 )
 
 func (s *Bot) AddExpense(ctx context.Context, msg *Message) error {
+	s.logger.Debug().Str("text", msg.Text).Int64("user", msg.UserID).Msg("AddExpense func started")
 	parts := strings.Split(msg.Text, ",")
 	if len(parts) < 2 {
+		s.logger.Error().Str("text", msg.Text).Int64("user", msg.UserID).Msg("Len parts more than 2")
 		return s.tgClient.SendMessage(invalidMsg, msg.UserID)
 	}
 	num, err := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
 	if err != nil {
+		s.logger.Error().Str("text", msg.Text).Int64("user", msg.UserID).Err(err)
 		return s.tgClient.SendMessage(invalidMsg, msg.UserID)
 	}
 	category := strings.TrimSpace(parts[1])
@@ -33,6 +36,7 @@ func (s *Bot) AddExpense(ctx context.Context, msg *Message) error {
 	if len(parts) > 2 {
 		t, err := time.Parse("2006-01-02", strings.TrimSpace(parts[2]))
 		if err != nil {
+			s.logger.Error().Str("text", msg.Text).Int64("user", msg.UserID).Err(err).Msg("Parsefloat of msg error")
 			return s.tgClient.SendMessage(invalidTimestamp, msg.UserID)
 		}
 		exp.Date = t
@@ -40,6 +44,7 @@ func (s *Bot) AddExpense(ctx context.Context, msg *Message) error {
 
 	err = s.expStorage.Add(ctx, msg.UserID, exp)
 	if err != nil {
+		s.logger.Error().Str("text", msg.Text).Int64("user", msg.UserID).Err(err)
 		return err
 	}
 
@@ -56,6 +61,7 @@ func (s *Bot) checkLimit(ctx context.Context, userID int64) error {
 
 	res, err := s.expStorage.GetByRange(ctx, userID, expense_storage.Month)
 	if err != nil {
+		s.logger.Error().Err(err)
 		return s.tgClient.SendMessage(err.Error(), userID)
 	}
 
@@ -66,6 +72,7 @@ func (s *Bot) checkLimit(ctx context.Context, userID int64) error {
 
 	curr, err := s.expStorage.GetCurrency(ctx, userID)
 	if err != nil {
+		s.logger.Error().Err(err).Send()
 		return s.tgClient.SendMessage(err.Error(), userID)
 	}
 

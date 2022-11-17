@@ -3,8 +3,8 @@ package messages
 import (
 	"context"
 	"database/sql"
-	"log"
 
+	"github.com/rs/zerolog"
 	"gitlab.ozon.dev/ninashvl/homework-1/config"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage"
@@ -25,17 +25,19 @@ type Bot struct {
 	tgClient        MessageSender
 	expStorage      expense_storage.IStorage
 	dlgStateStorage dialogue_state_storage.IStorage
+	logger          zerolog.Logger
 }
 
-func New(tgClient MessageSender, cfg *config.Service) *Bot {
+func New(tgClient MessageSender, cfg *config.Service, l zerolog.Logger) *Bot {
 	db, err := sql.Open("pgx", cfg.PsqlDSN())
 	if err != nil {
-		log.Fatal(err)
+		l.Fatal().Err(err)
 	}
 	return &Bot{
 		tgClient:        tgClient,
-		expStorage:      psql.New(db),
+		expStorage:      psql.New(db, l),
 		dlgStateStorage: in_mem_dlg.New(),
+		logger:          l,
 	}
 }
 
@@ -69,6 +71,7 @@ func (s *Bot) HandleCommand(msg *Message) error {
 }
 
 func (s *Bot) HandleMessage(ctx context.Context, msg *Message) error {
+	s.logger.Info().Str("text", msg.Text).Int64("user", msg.UserID).Msg("Handle message func called")
 	switch {
 	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.AddCommandState:
 		return s.AddExpense(ctx, msg)
@@ -98,6 +101,6 @@ func (s *Bot) IncomingMessage(ctx context.Context, msg *Message) error {
 func (s *Bot) ListenQuotes(ctx context.Context) {
 	err := s.expStorage.UpdateCurrency(ctx)
 	if err != nil {
-		log.Println("[ERROR] UpdateCurrency failed")
+		s.logger.Error().Err(err).Msg("UpdateCurrency failed")
 	}
 }

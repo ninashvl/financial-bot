@@ -2,10 +2,10 @@ package tg
 
 import (
 	"context"
-	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/messages"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
@@ -17,9 +17,10 @@ type TokenGetter interface {
 
 type Client struct {
 	client *tgbotapi.BotAPI
+	logger zerolog.Logger
 }
 
-func New(tokenGetter TokenGetter) (*Client, error) {
+func New(tokenGetter TokenGetter, l zerolog.Logger) (*Client, error) {
 	client, err := tgbotapi.NewBotAPI(tokenGetter.Token())
 	if err != nil {
 		return nil, errors.Wrap(err, "NewBotAPI")
@@ -27,6 +28,7 @@ func New(tokenGetter TokenGetter) (*Client, error) {
 
 	return &Client{
 		client: client,
+		logger: l,
 	}, nil
 }
 
@@ -35,6 +37,7 @@ func (c *Client) SendMessage(text string, userID int64) error {
 	msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 	_, err := c.client.Send(msg)
 	if err != nil {
+		c.logger.Error().Err(err)
 		return errors.Wrap(err, "client.Send")
 	}
 	return nil
@@ -46,16 +49,15 @@ func (c *Client) ListenUpdates(ctx context.Context, bot *messages.Bot) {
 
 	updates := c.client.GetUpdatesChan(u)
 	go bot.ListenQuotes(ctx)
-
-	log.Println("listening for messages")
+	c.logger.Info().Msg("listening for messages")
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Stop listening messages")
+			c.logger.Info().Msg("Stop listening for messages")
 			return
 		case update := <-updates:
 			if update.Message != nil { // If we got a message
-				log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+				c.logger.Info().Str("message", update.Message.From.UserName).Str("text", update.Message.Text)
 				msg := &messages.Message{
 					Text:      update.Message.Text,
 					UserID:    update.Message.From.ID,
@@ -63,7 +65,7 @@ func (c *Client) ListenUpdates(ctx context.Context, bot *messages.Bot) {
 				}
 				err := bot.IncomingMessage(ctx, msg)
 				if err != nil {
-					log.Println("error processing message:", err)
+					c.logger.Error().Err(err).Msg("error processing message:")
 				}
 			}
 		}

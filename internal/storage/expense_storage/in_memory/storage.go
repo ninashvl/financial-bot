@@ -124,6 +124,7 @@ func (s *Storage) GetByRange(ctx context.Context, userID int64, timeRange int) (
 	return res, nil
 }
 
+// todo обновить логирование
 func (s *Storage) UpdateCurrency(ctx context.Context) error {
 	ticker := time.NewTicker(time.Minute * 10)
 	for {
@@ -136,6 +137,7 @@ func (s *Storage) UpdateCurrency(ctx context.Context) error {
 			curr, err := s.currencyClient.GetQuote(tradingview.UsdTicker)
 			if err != nil {
 				log.Println("[ERROR] getting usd quote error", err.Error())
+
 				continue
 			}
 			s.usdRUB = curr

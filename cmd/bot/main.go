@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"os"
 	"os/signal"
 
+	"github.com/rs/zerolog"
 	"golang.org/x/sys/unix"
 
 	"gitlab.ozon.dev/ninashvl/homework-1/config"
@@ -17,17 +17,19 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		unix.SIGTERM, unix.SIGKILL, unix.SIGINT)
 	defer cancel()
+	logger := zerolog.New(os.Stdout)
+
 	cfg, err := config.New()
 	if err != nil {
-		log.Fatal("config init failed:", err)
+		logger.Fatal().Err(err).Msg("config init failed")
 	}
 
 	tgClient, err := tg.New(cfg)
 	if err != nil {
-		log.Fatal("tg client init failed:", err)
+		logger.Fatal().Err(err).Msg("tg client init failed")
 	}
 
-	bot := messages.New(tgClient, cfg)
+	bot := messages.New(tgClient, cfg, logger)
 	tgClient.ListenUpdates(ctx, bot)
-	fmt.Println("[INFO] application gracefully stopped")
+	logger.Info().Msg("application gracefully stopped")
 }

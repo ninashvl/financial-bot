@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/schollz/progressbar"
 	"github.com/tjarratt/babble"
 	"golang.org/x/sys/unix"
@@ -43,7 +44,7 @@ func main() {
 		log.Fatal(err)
 	}
 	bar := progressbar.New(testUsersCount)
-	s := expstore.New(db)
+	s := expstore.New(db, zerolog.Logger{})
 	b := babble.NewBabbler()
 	for i := 0; i < testUsersCount; i++ {
 		_ = bar.Add(1)

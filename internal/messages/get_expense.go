@@ -10,6 +10,7 @@ import (
 )
 
 func (s *Bot) GetExpense(ctx context.Context, msg *Message) error {
+	s.logger.Info().Str("text", msg.Text).Int64("user", msg.UserID).Msg("GetExpense func started")
 	var res []*models.TotalExpense
 	var err error
 	switch strings.TrimSpace(msg.Text) {
@@ -40,5 +41,6 @@ func (s *Bot) GetExpense(ctx context.Context, msg *Message) error {
 		builder.WriteString(" " + curr)
 		builder.WriteString("\n")
 	}
+	s.logger.Info().Str("text", msg.Text).Int64("user", msg.UserID).Msg("GetExpense func executed")
 	return s.tgClient.SendMessage(builder.String(), msg.UserID)
 }
