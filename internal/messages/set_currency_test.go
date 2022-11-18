@@ -29,7 +29,7 @@ func TestBot_SetCurrency(t *testing.T) {
 	// case 1 - invalid income currency
 	userID := int64(1)
 	curr := "ARS"
-	sender.EXPECT().SendMessage(invalidCurrency, userID)
+	sender.EXPECT().SendMessage(context.TODO(), invalidCurrency, userID)
 	msg := &Message{
 		Text:   curr,
 		UserID: userID,
@@ -41,7 +41,7 @@ func TestBot_SetCurrency(t *testing.T) {
 	// case 2 - success
 	curr = models.UsdCurrency
 	expStore.EXPECT().SetCurrency(context.TODO(), userID, curr)
-	sender.EXPECT().SendMessage(currencySaved, userID)
+	sender.EXPECT().SendMessage(context.TODO(), currencySaved, userID)
 
 	msg = &Message{
 		Text:   curr,

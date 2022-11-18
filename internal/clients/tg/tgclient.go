@@ -6,6 +6,9 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/messages"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
@@ -32,12 +35,17 @@ func New(tokenGetter TokenGetter, l zerolog.Logger) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) SendMessage(text string, userID int64) error {
+func (c *Client) SendMessage(ctx context.Context, text string, userID int64) error {
+	var span trace.Span
+	ctx, span = otel.Tracer("update").Start(ctx, "client.SendMessage")
+	defer span.End()
+
 	msg := tgbotapi.NewMessage(userID, text)
 	msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 	_, err := c.client.Send(msg)
 	if err != nil {
-		c.logger.Error().Err(err)
+		span.RecordError(err)
+		c.logger.Error().Err(err).Msg("Sending error")
 		return errors.Wrap(err, "client.Send")
 	}
 	return nil
@@ -63,16 +71,22 @@ func (c *Client) ListenUpdates(ctx context.Context, bot *messages.Bot) {
 					UserID:    update.Message.From.ID,
 					IsCommand: update.Message.IsCommand(),
 				}
-				err := bot.IncomingMessage(ctx, msg)
+
+				trace := otel.Tracer("update")
+				sCtx, span := trace.Start(ctx, "updates msg")
+				span.SetAttributes(attribute.Key("msg").String(msg.Text), attribute.Key("user_id").Int64(msg.UserID))
+
+				err := bot.IncomingMessage(sCtx, msg)
 				if err != nil {
 					c.logger.Error().Err(err).Msg("error processing message:")
 				}
+				span.End()
 			}
 		}
 	}
 }
 
-func (c *Client) SendRangeKeyboard(userID int64, text string) error {
+func (c *Client) SendRangeKeyboard(ctx context.Context, userID int64, text string) error {
 	rangeKeyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("День"),
@@ -80,13 +94,22 @@ func (c *Client) SendRangeKeyboard(userID int64, text string) error {
 			tgbotapi.NewKeyboardButton("Год"),
 		),
 	)
+
+	var span trace.Span
+	ctx, span = otel.Tracer("update").Start(ctx, "client.SendRangeKeyboard")
+	defer span.End()
+
 	msg := tgbotapi.NewMessage(userID, text)
 	msg.ReplyMarkup = rangeKeyboard
 	_, err := c.client.Send(msg)
-	return err
+	if err != nil {
+		span.RecordError(err)
+		return err
+	}
+	return nil
 }
 
-func (c *Client) SendCurrencyKeyboard(userID int64, text string) error {
+func (c *Client) SendCurrencyKeyboard(ctx context.Context, userID int64, text string) error {
 	rangeKeyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton(models.UsdCurrency),
@@ -97,8 +120,16 @@ func (c *Client) SendCurrencyKeyboard(userID int64, text string) error {
 			tgbotapi.NewKeyboardButton(models.CnyCurrency),
 		),
 	)
+	var span trace.Span
+	ctx, span = otel.Tracer("update").Start(ctx, "client.SendCurrencyKeyboard")
+	defer span.End()
+
 	msg := tgbotapi.NewMessage(userID, text)
 	msg.ReplyMarkup = rangeKeyboard
 	_, err := c.client.Send(msg)
-	return err
+	if err != nil {
+		span.RecordError(err)
+		return err
+	}
+	return nil
 }

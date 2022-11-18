@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/zerolog"
 	"gitlab.ozon.dev/ninashvl/homework-1/config"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
@@ -11,14 +12,14 @@ import (
 	in_mem_dlg "gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage/in_memory"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/expense_storage"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/expense_storage/psql"
-
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type MessageSender interface {
-	SendMessage(text string, userID int64) error
-	SendRangeKeyboard(userID int64, text string) error
-	SendCurrencyKeyboard(userID int64, text string) error
+	SendMessage(ctx context.Context, text string, userID int64) error
+	SendRangeKeyboard(ctx context.Context, userID int64, text string) error
+	SendCurrencyKeyboard(ctx context.Context, userID int64, text string) error
 }
 
 type Bot struct {
@@ -47,31 +48,41 @@ type Message struct {
 	IsCommand bool
 }
 
-func (s *Bot) HandleCommand(msg *Message) error {
+func (s *Bot) HandleCommand(ctx context.Context, msg *Message) error {
+	var span trace.Span
+	ctx, span = otel.Tracer("update").Start(ctx, "bot.HandleCommand")
+	defer span.End()
+
+	s.logger.Debug().Str("text", msg.Text).Int64("user", msg.UserID).Msg("Handle command func called")
+
 	switch {
 	case msg.Text == startCommand:
-		return s.tgClient.SendMessage("hello", msg.UserID)
+		return s.tgClient.SendMessage(ctx, "hello", msg.UserID)
 	case msg.Text == helpCommand && msg.IsCommand:
-		return s.tgClient.SendMessage(help, msg.UserID)
+		return s.tgClient.SendMessage(ctx, help, msg.UserID)
 	case msg.Text == addCommand && msg.IsCommand:
 		s.dlgStateStorage.Set(msg.UserID, models.AddCommandState)
-		return s.tgClient.SendMessage(addMessage, msg.UserID)
+		return s.tgClient.SendMessage(ctx, addMessage, msg.UserID)
 	case msg.Text == getExpensesCommand && msg.IsCommand:
 		s.dlgStateStorage.Set(msg.UserID, models.GetCommandState)
-		return s.tgClient.SendRangeKeyboard(msg.UserID, "Выберите диапазон")
+		return s.tgClient.SendRangeKeyboard(ctx, msg.UserID, "Выберите диапазон")
 	case msg.Text == chooseCurrencyCommand && msg.IsCommand:
 		s.dlgStateStorage.Set(msg.UserID, models.ChooseCurrencyState)
-		return s.tgClient.SendCurrencyKeyboard(msg.UserID, "Выберите валюту")
+		return s.tgClient.SendCurrencyKeyboard(ctx, msg.UserID, "Выберите валюту")
 	case msg.Text == addLimit && msg.IsCommand:
 		s.dlgStateStorage.Set(msg.UserID, models.AddLimit)
-		return s.tgClient.SendMessage("Введите лимит на траты в рублях на месяц", msg.UserID)
+		return s.tgClient.SendMessage(ctx, "Введите лимит на траты в рублях на месяц", msg.UserID)
 	default:
-		return s.tgClient.SendMessage(invalidCommand, msg.UserID)
+		return s.tgClient.SendMessage(ctx, invalidCommand, msg.UserID)
 	}
 }
 
 func (s *Bot) HandleMessage(ctx context.Context, msg *Message) error {
-	s.logger.Info().Str("text", msg.Text).Int64("user", msg.UserID).Msg("Handle message func called")
+	var span trace.Span
+	ctx, span = otel.Tracer("update").Start(ctx, "bot.HandleMessage")
+	defer span.End()
+
+	s.logger.Debug().Str("text", msg.Text).Int64("user", msg.UserID).Msg("Handle message func called")
 	switch {
 	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.AddCommandState:
 		return s.AddExpense(ctx, msg)
@@ -82,7 +93,7 @@ func (s *Bot) HandleMessage(ctx context.Context, msg *Message) error {
 	case !msg.IsCommand && s.dlgStateStorage.Get(msg.UserID) == models.AddLimit:
 		return s.AddLimit(ctx, msg)
 	default:
-		return s.tgClient.SendMessage(invalidMsg, msg.UserID)
+		return s.tgClient.SendMessage(ctx, invalidMsg, msg.UserID)
 	}
 }
 
@@ -93,7 +104,7 @@ func (s *Bot) IncomingMessage(ctx context.Context, msg *Message) error {
 		}
 	}()
 	if msg.IsCommand {
-		return s.HandleCommand(msg)
+		return s.HandleCommand(ctx, msg)
 	}
 	return s.HandleMessage(ctx, msg)
 }

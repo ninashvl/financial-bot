@@ -2,6 +2,7 @@ package tradingview
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -34,17 +38,28 @@ func New() *Client {
 
 var errCodes = []string{"400", "404", "402", "500", "502", "505"}
 
-func (c *Client) GetQuote(ticker string) (float64, error) {
+func (c *Client) GetQuote(ctx context.Context, ticker string) (float64, error) {
 	var (
 		resp *http.Response
 		err  error
 	)
 
+	var span trace.Span
+	ctx, span = otel.Tracer("update_currency").Start(ctx, "tradingview.GetQuote")
+	span.SetAttributes(attribute.Key("quote").String(ticker))
+	defer span.End()
+
 	ticker = strings.ToUpper(ticker)
 	body := []byte(`{"symbols":{"tickers":["FX_IDC:` + ticker + `"],"query":{"types":[]}},"columns":["close", "change_abs", "change"]}`)
 
 	resp, err = http.Post(apiURL, "multipart/form-data", bytes.NewReader(body))
-	if err != nil || checkResStatus(resp.Status) {
+	if err != nil {
+		span.RecordError(err)
+		return 0, err
+	}
+
+	if checkResStatus(resp.Status) {
+		span.RecordError(err)
 		return 0, errors.New("invalid response status code")
 	}
 
@@ -52,11 +67,13 @@ func (c *Client) GetQuote(ticker string) (float64, error) {
 
 	htmlData, err := io.ReadAll(resp.Body)
 	if err != nil {
+		span.RecordError(err)
 		return 0, fmt.Errorf("unable to decode response body: %w", err)
 	}
 
 	val, _, _, err := jsonparser.Get(htmlData, "data", "[0]", "d")
 	if err != nil {
+		span.RecordError(err)
 		return 0, err
 	}
 
@@ -67,6 +84,7 @@ func (c *Client) GetQuote(ticker string) (float64, error) {
 	quoteVal := float64(0)
 	quoteVal, err = strconv.ParseFloat(strArr[0], 64)
 	if err != nil {
+		span.RecordError(err)
 		return 0, err
 	}
 

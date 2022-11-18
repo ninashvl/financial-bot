@@ -133,7 +133,6 @@ func (s *Storage) UpdateCurrency(ctx context.Context) error {
 			return nil
 		case <-ticker.C:
 			log.Println("[INFO] start of updating currency quotes")
-
 			curr, err := s.currencyClient.GetQuote(tradingview.UsdTicker)
 			if err != nil {
 				log.Println("[ERROR] getting usd quote error", err.Error())

@@ -10,8 +10,9 @@ import (
 const configFile = "data/config.yaml"
 
 type Config struct {
-	Token string `yaml:"token"`
-	DbDSN string `yaml:"dbDSN"`
+	Token    string `yaml:"token"`
+	DbDSN    string `yaml:"dbDSN"`
+	TraceUrl string `yaml:"traceUrl"`
 }
 
 type Service struct {
@@ -40,4 +41,8 @@ func (s *Service) Token() string {
 
 func (s *Service) PsqlDSN() string {
 	return s.config.DbDSN
+}
+
+func (s *Service) TraceUrl() string {
+	return s.config.TraceUrl
 }

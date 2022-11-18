@@ -30,7 +30,7 @@ func TestBot_getExpenseInvalid(t *testing.T) {
 	userID := int64(1)
 
 	// case 1 - invalid range
-	sender.EXPECT().SendMessage(invalidRange, userID)
+	sender.EXPECT().SendMessage(context.TODO(), invalidRange, userID)
 	msg := &Message{
 		Text:   "",
 		UserID: userID,
@@ -44,7 +44,7 @@ func TestBot_getExpenseInvalid(t *testing.T) {
 		Text:   "День",
 		UserID: userID,
 	}
-	sender.EXPECT().SendMessage(expensesNotFound, userID)
+	sender.EXPECT().SendMessage(context.TODO(), expensesNotFound, userID)
 	err = bot.GetExpense(context.TODO(), msg)
 	assert.Nil(t, err, expensesNotFound)
 }
@@ -71,7 +71,7 @@ func TestBot_getExpense(t *testing.T) {
 	}, nil)
 	expStore.EXPECT().GetCurrency(context.TODO(), userID).Return("RUB", nil)
 	resMsg := category + ": " + strconv.FormatFloat(amount, 'f', 2, 64) + " " + curr + "\n"
-	sender.EXPECT().SendMessage(resMsg, userID)
+	sender.EXPECT().SendMessage(context.TODO(), resMsg, userID)
 
 	msg := &Message{
 		Text:   "День",
