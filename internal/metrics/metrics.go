@@ -12,10 +12,15 @@ var (
 		Name: "total_msg_count",
 		Help: "Count of total messages",
 	})
+	TotalCommandsCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "total_commands_count",
+		Help: "Count of total commands sent",
+	}, []string{"command"})
 )
 
 func init() {
 	prometheus.MustRegister(TotalMsgCount)
+	prometheus.MustRegister(TotalCommandsCount)
 }
 
 func StartMetricServer() {

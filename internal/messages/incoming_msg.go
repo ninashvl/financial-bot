@@ -53,7 +53,7 @@ func (s *Bot) HandleCommand(ctx context.Context, msg *Message) error {
 	var span trace.Span
 	ctx, span = otel.Tracer("update").Start(ctx, "bot.HandleCommand")
 	defer span.End()
-
+	metrics.TotalCommandsCount.WithLabelValues(msg.Text).Inc()
 	s.logger.Debug().Str("text", msg.Text).Int64("user", msg.UserID).Msg("Handle command func called")
 
 	switch {
