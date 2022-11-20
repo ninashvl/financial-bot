@@ -6,6 +6,7 @@ import (
 	"os/signal"
 
 	"github.com/rs/zerolog"
+	"gitlab.ozon.dev/ninashvl/homework-1/internal/metrics"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/sys/unix"
 
@@ -40,7 +41,7 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("tg client init failed")
 	}
-
+	go metrics.StartMetricServer()
 	bot := messages.New(tgClient, cfg, logger)
 	tgClient.ListenUpdates(ctx, bot)
 	logger.Info().Msg("application gracefully stopped")

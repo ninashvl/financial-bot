@@ -1,4 +1,4 @@
 # по хорошему этот конфиг должен лежать в хранилище секретов, но мы же доверяем друг другу?:)
 token: "5638303122:AAGeMgstE7oXRnh0z5hUoFDOlILDmOwH45M"
-dbDSN: "postgres://nina:qwerty@localhost:5003/fin_db"
-traceUrl: "http://localhost:14268/api/traces"
+dbDSN: "postgres://nina:qwerty@postgres-fin-bot:5432/fin_db"
+traceUrl: "http://jaeger-fin-bot:14268/api/traces"

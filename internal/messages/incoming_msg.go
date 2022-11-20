@@ -7,6 +7,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/zerolog"
 	"gitlab.ozon.dev/ninashvl/homework-1/config"
+	"gitlab.ozon.dev/ninashvl/homework-1/internal/metrics"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/models"
 	"gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage"
 	in_mem_dlg "gitlab.ozon.dev/ninashvl/homework-1/internal/storage/dialogue_state_storage/in_memory"
@@ -98,6 +99,7 @@ func (s *Bot) HandleMessage(ctx context.Context, msg *Message) error {
 }
 
 func (s *Bot) IncomingMessage(ctx context.Context, msg *Message) error {
+	metrics.TotalMsgCount.Inc()
 	defer func() {
 		if !msg.IsCommand {
 			s.dlgStateStorage.DeleteState(msg.UserID)
