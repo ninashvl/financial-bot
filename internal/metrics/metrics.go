@@ -25,5 +25,6 @@ func init() {
 
 func StartMetricServer() {
 	http.Handle("/metrics", promhttp.Handler())
+	// nolint: errcheck
 	http.ListenAndServe(":9176", nil)
 }

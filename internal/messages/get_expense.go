@@ -34,7 +34,7 @@ func (s *Bot) GetExpense(ctx context.Context, msg *Message) error {
 		return s.tgClient.SendMessage(ctx, err.Error(), msg.UserID)
 	}
 	if len(res) == 0 {
-		span.SetStatus(codes.Error, err.Error())
+		span.SetStatus(codes.Error, "empty res")
 		return s.tgClient.SendMessage(ctx, expensesNotFound, msg.UserID)
 	}
 	curr, err := s.expStorage.GetCurrency(ctx, msg.UserID)

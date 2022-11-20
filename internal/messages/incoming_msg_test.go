@@ -24,7 +24,7 @@ func Test_OnStartCommand_ShouldAnswerWithIntroMessage(t *testing.T) {
 		dlgStateStorage: stStore,
 	}
 
-	sender.EXPECT().SendMessage(context.TODO(), "hello", int64(123))
+	sender.EXPECT().SendMessage(gomock.Any(), "hello", int64(123))
 
 	err := bot.IncomingMessage(context.TODO(), &Message{
 		Text:      "/start",
@@ -47,7 +47,7 @@ func Test_OnUnknownCommand_ShouldAnswerWithHelpMessage(t *testing.T) {
 		dlgStateStorage: stStore,
 	}
 
-	sender.EXPECT().SendMessage(context.TODO(), invalidCommand, int64(123))
+	sender.EXPECT().SendMessage(gomock.Any(), invalidCommand, int64(123))
 
 	err := bot.IncomingMessage(context.TODO(), &Message{
 		Text:      "some text",

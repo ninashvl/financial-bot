@@ -29,7 +29,7 @@ func TestBot_SetCurrency(t *testing.T) {
 	// case 1 - invalid income currency
 	userID := int64(1)
 	curr := "ARS"
-	sender.EXPECT().SendMessage(context.TODO(), invalidCurrency, userID)
+	sender.EXPECT().SendMessage(gomock.Any(), invalidCurrency, userID)
 	msg := &Message{
 		Text:   curr,
 		UserID: userID,
@@ -40,8 +40,8 @@ func TestBot_SetCurrency(t *testing.T) {
 
 	// case 2 - success
 	curr = models.UsdCurrency
-	expStore.EXPECT().SetCurrency(context.TODO(), userID, curr)
-	sender.EXPECT().SendMessage(context.TODO(), currencySaved, userID)
+	expStore.EXPECT().SetCurrency(gomock.Any(), userID, curr)
+	sender.EXPECT().SendMessage(gomock.Any(), currencySaved, userID)
 
 	msg = &Message{
 		Text:   curr,

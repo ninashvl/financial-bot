@@ -45,7 +45,7 @@ func (c *Client) GetQuote(ctx context.Context, ticker string) (float64, error) {
 	)
 
 	var span trace.Span
-	ctx, span = otel.Tracer("update_currency").Start(ctx, "tradingview.GetQuote")
+	_, span = otel.Tracer("update_currency").Start(ctx, "tradingview.GetQuote")
 	span.SetAttributes(attribute.Key("quote").String(ticker))
 	defer span.End()
 

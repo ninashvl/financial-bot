@@ -31,7 +31,7 @@ func TestBot_addExpenseInvalid(t *testing.T) {
 		Text:   "1234",
 		UserID: userID,
 	}
-	sender.EXPECT().SendMessage(context.TODO(), invalidMsg, userID)
+	sender.EXPECT().SendMessage(gomock.Any(), invalidMsg, userID)
 
 	err := bot.AddExpense(context.TODO(), msg)
 	assert.Nil(t, err, "addExpense error")
@@ -41,7 +41,7 @@ func TestBot_addExpenseInvalid(t *testing.T) {
 		Text:   "сумма,категория",
 		UserID: userID,
 	}
-	sender.EXPECT().SendMessage(context.TODO(), invalidMsg, userID)
+	sender.EXPECT().SendMessage(gomock.Any(), invalidMsg, userID)
 
 	err = bot.AddExpense(context.TODO(), msg)
 	assert.Nil(t, err, "addExpense error")
@@ -51,7 +51,7 @@ func TestBot_addExpenseInvalid(t *testing.T) {
 		Text:   "1,категория, 10.11.2001",
 		UserID: userID,
 	}
-	sender.EXPECT().SendMessage(context.TODO(), invalidTimestamp, userID)
+	sender.EXPECT().SendMessage(gomock.Any(), invalidTimestamp, userID)
 
 	err = bot.AddExpense(context.TODO(), msg)
 	assert.Nil(t, err, "addExpense error")
@@ -68,9 +68,9 @@ func TestBot_addExpenseSuccess(t *testing.T) {
 		dlgStateStorage: stStore,
 	}
 	userID := int64(1)
-	expStore.EXPECT().Add(context.TODO(), userID, gomock.Any())
-	sender.EXPECT().SendMessage(context.TODO(), savedMsg, userID)
-	expStore.EXPECT().GetLimit(context.TODO(), userID)
+	expStore.EXPECT().Add(gomock.Any(), userID, gomock.Any())
+	sender.EXPECT().SendMessage(gomock.Any(), savedMsg, userID)
+	expStore.EXPECT().GetLimit(gomock.Any(), userID)
 	msg := &Message{
 		Text:   "1,категория",
 		UserID: userID,

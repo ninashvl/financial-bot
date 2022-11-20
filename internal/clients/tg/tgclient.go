@@ -37,7 +37,7 @@ func New(tokenGetter TokenGetter, l zerolog.Logger) (*Client, error) {
 
 func (c *Client) SendMessage(ctx context.Context, text string, userID int64) error {
 	var span trace.Span
-	ctx, span = otel.Tracer("update").Start(ctx, "client.SendMessage")
+	_, span = otel.Tracer("update").Start(ctx, "client.SendMessage")
 	defer span.End()
 
 	msg := tgbotapi.NewMessage(userID, text)
@@ -96,7 +96,8 @@ func (c *Client) SendRangeKeyboard(ctx context.Context, userID int64, text strin
 	)
 
 	var span trace.Span
-	ctx, span = otel.Tracer("update").Start(ctx, "client.SendRangeKeyboard")
+	// nolint: ineffassign
+	_, span = otel.Tracer("update").Start(ctx, "client.SendRangeKeyboard")
 	defer span.End()
 
 	msg := tgbotapi.NewMessage(userID, text)
@@ -121,7 +122,7 @@ func (c *Client) SendCurrencyKeyboard(ctx context.Context, userID int64, text st
 		),
 	)
 	var span trace.Span
-	ctx, span = otel.Tracer("update").Start(ctx, "client.SendCurrencyKeyboard")
+	_, span = otel.Tracer("update").Start(ctx, "client.SendCurrencyKeyboard")
 	defer span.End()
 
 	msg := tgbotapi.NewMessage(userID, text)
