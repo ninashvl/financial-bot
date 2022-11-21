@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/go-redis/redis/v8"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/zerolog"
 	"gitlab.ozon.dev/ninashvl/homework-1/config"
@@ -35,6 +36,12 @@ func New(tgClient MessageSender, cfg *config.Service, l zerolog.Logger) *Bot {
 	if err != nil {
 		l.Fatal().Err(err)
 	}
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
 	return &Bot{
 		tgClient:        tgClient,
 		expStorage:      psql.New(db, l),

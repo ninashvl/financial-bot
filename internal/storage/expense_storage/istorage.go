@@ -23,3 +23,8 @@ type IStorage interface {
 	SetLimit(ctx context.Context, userID int64, limit float64) error
 	GetLimit(ctx context.Context, userID int64) (float64, error)
 }
+
+type IExpenseCache interface {
+	GetByRange(ctx context.Context, userID int64, timeRange int) ([]*models.TotalExpense, error)
+	SetByRange(ctx context.Context, userID int64, timeRange int, exps []*models.TotalExpense) error
+}
